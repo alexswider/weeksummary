@@ -1,0 +1,13 @@
+%head
+  %title Weekly summary of your social media activity
+
+%form{:action => "summary", :method => "post"}
+  %input{:type => "text", :name => "twitter", :placeholder => "Your Twitter username"}
+  %br
+  %input{:type => "text", :name => "fb", :placeholder => "Your Facebook page's id"}
+  %br
+  %input{:type => "text", :name => "boundary[hi]", :placeholder => "Older than DD/MM/YYYY"}
+  %br
+  %input{:type => "text", :name => "boundary[low]", :placeholder => "Newer than DD/MM/YYYY"}
+  %br
+  %input{:type => "submit"}
