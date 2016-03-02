@@ -8,7 +8,7 @@ get "/" do
 end
 
 post "/summary" do
-	template = ";;;;;;;\nDate;Platform;Post Copy;Link attached;Comments;Likes;Shares;Retweets;Engagement\n"
+	template = ";;;;;;;\r\nDate;Platform;Post Copy;Link attached;Comments;Likes;Shares;Retweets;Engagement\r\n"
 	more = true
 	first = true
 	lrts = 0
@@ -78,10 +78,10 @@ post "/summary" do
 						end
 					end
 				end
-				template << date.strftime("%d %b %y;") << "Facebook;" << text << ";#{link};#{comments};#{likes};#{shares};;#{likes + comments + shares}\n"
+				template << date.strftime("%d %b %y;") << "Facebook;" << text << ";#{link};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n"
 			end
 		end
-		template = template.prepend("Facebook summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs + mcomm} total engagements) with #{mfavs} likes, #{mcomm} comments and #{mrts} shares. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs + lcomm} total engagements) with #{lfavs} likes, #{lcomm} comments and #{lrts} shares.;;;;;\n")
+		template = template.prepend("Facebook summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs + mcomm} total engagements) with #{mfavs} likes, #{mcomm} comments and #{mrts} shares. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs + lcomm} total engagements) with #{lfavs} likes, #{lcomm} comments and #{lrts} shares.;;;;;\r\n")
 	end
 	unless params[:twitter].size == 0
 		more = true
@@ -125,12 +125,12 @@ post "/summary" do
 						end
 					end
 				end
-				template << date.strftime("%d %b %y;") << "Twitter;" << text << ";;;#{favorites};;#{retweets};#{favorites + retweets}\n"
+				template << date.strftime("%d %b %y;") << "Twitter;" << text << ";;;#{favorites};;#{retweets};#{favorites + retweets}\r\n"
 			end
 		end
-	template = template.prepend("Twitter summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs} total engagements) with #{mrts} retweets and #{mfavs} likes. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs} total engagements) with #{lrts} retweets and #{lfavs} likes.;;;;;\n")
+	template = template.prepend("Twitter summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs} total engagements) with #{mrts} retweets and #{mfavs} likes. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs} total engagements) with #{lrts} retweets and #{lfavs} likes.;;;;;\r\n")
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
 	File.write(filename, template)
-	send_file(filename, :filename => (low.strftime("%d") << "-" << hi.strftime("%d") << hi.strftime("%b") << "_summary"))
+	send_file(filename, :filename => (low.strftime("%d") << "-" << hi.strftime("%d") << hi.strftime("%b") << "_summary.csv"))
 end
