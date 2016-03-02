@@ -1,6 +1,5 @@
 require 'httparty'
 require 'sinatra'
-require 'pry'
 set :haml, :escape_html => true
 
 tokens = File.read("tokens.txt").lines
@@ -89,7 +88,6 @@ post "/summary" do
 		first = true
 		while more
 			tweets = HTTParty.get("https://api.twitter.com/1.1/statuses/user_timeline.json?include_rts=false&count=200&screen_name=#{params[:twitter]}#{max_id}", :headers => {"Authorization" => "Bearer " + tokens[0].chop})
-			binding.pry
 			tweets.each do |tweet|
 				ary = tweet["created_at"].split
 				date = Time.new(ary.last, ary[1], ary[2])
