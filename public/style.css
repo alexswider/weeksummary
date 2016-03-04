@@ -21,11 +21,17 @@ input[type=text]:focus {
 }
 input[type=text]#names {
 	height: 40px;
-	width: 200px
+	width: 200px;
+	position: relative;
+	bottom: 30px;
+	left: 40px;
 }
 input[type=text]#date {
 	height: 40px;
-	width: 120px;
+	width: 132px;
+	position: relative;
+	bottom: 5px;
+	left: 20px;
 }
 input[type=submit] {
 	background-image: url(scrape.png);

@@ -1,14 +1,17 @@
-require 'httparty'
+#require 'httparty'
 require 'sinatra'
-require 'pry'
+#require 'pry'
 set :haml, :escape_html => true
 
-tokens = File.read("tokens.txt").lines
+#tokens = File.read("tokens.txt").lines
 get "/" do
 	haml :index
 end
 
 post "/summary" do
+	if params[:boundary][:hi].empty? or params[:boundary][:low].empty?
+		return "You must provide a time span"
+	end
 	summary = [";;;;;;;\r\nDate;Platform;Post Copy;Link attached;Comments;Likes;Shares;Retweets;Engagement\r\n"]
 	all_posts = []
 	more = true

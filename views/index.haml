@@ -6,6 +6,7 @@
   .heading
     Social Scraper
   %br
+  %br
   %form{:action => "summary", :method => "post"}
     %img(src="fb.png")
     %input{:id => "names", :type => "text", :name => "fb", :placeholder => "Your Facebook page's id"}
@@ -16,9 +17,9 @@
     %br
     %br
     .from_to
-      from &nbsp;
+      from 
       %input{:id => "date", :type => "text", :name => "boundary[hi]", :placeholder => "MM/DD/YYYY"}
-      &nbsp; &nbsp; to &nbsp;
+      &nbsp; &nbsp; to
       %input{:id => "date", :type => "text", :name => "boundary[low]", :placeholder => "MM/DD/YYYY"}
       %br
       %br
