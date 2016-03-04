@@ -1,13 +1,25 @@
 %head
   %title Summary of your social media activity
+  %link{:rel => :stylesheet, :type => "text/css", :href => "style.css"}
 
-%form{:action => "summary", :method => "post"}
-  %input{:type => "text", :name => "twitter", :placeholder => "Your Twitter username"}
+%center
+  .heading
+    Social Scraper
   %br
-  %input{:type => "text", :name => "fb", :placeholder => "Your Facebook page's id"}
-  %br
-  %input{:type => "text", :name => "boundary[hi]", :placeholder => "Older than DD/MM/YYYY"}
-  %br
-  %input{:type => "text", :name => "boundary[low]", :placeholder => "Newer than DD/MM/YYYY"}
-  %br
-  %input{:type => "submit"}
+  %form{:action => "summary", :method => "post"}
+    %img(src="fb.png")
+    %input{:id => "names", :type => "text", :name => "fb", :placeholder => "Your Facebook page's id"}
+    %br
+    %br
+    %img(src="twitter.png")
+    %input{:id => "names", :type => "text", :name => "twitter", :placeholder => "Your Twitter username"}
+    %br
+    %br
+    .from_to
+      from &nbsp;
+      %input{:id => "date", :type => "text", :name => "boundary[hi]", :placeholder => "DD/MM/YYYY"}
+      &nbsp; &nbsp; to &nbsp;
+      %input{:id => "date", :type => "text", :name => "boundary[low]", :placeholder => "DD/MM/YYYY"}
+      %br
+      %br
+    %input{:type => "submit"}

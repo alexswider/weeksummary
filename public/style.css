@@ -1,0 +1,38 @@
+.heading {
+	font-family: AvenirNext-Bold;
+	font-size: 48px;
+}
+.from_to {
+	font-family: AvenirNext-Regular;
+	font-size: 36px;
+}
+input[type=text] {
+	padding: 12px 20px;
+	margin: 8px 0;
+	box-sizing: border-box;
+	border: 3px solid #ccc;
+	border-radius: 4px;
+	-webkit-transition: 0.5s;
+	transition: 0.5s;
+	outline: none;
+}
+input[type=text]:focus {
+	border: 3px solid #555;
+}
+input[type=text]#names {
+	height: 40px;
+	width: 200px
+}
+input[type=text]#date {
+	height: 40px;
+	width: 120px;
+}
+input[type=submit] {
+	background-image: url(scrape.png);
+	background-repeat: no-repeat;
+	background-color: transparent;
+	height: 54px;
+	width: 211px;
+	border:	none;
+	text-indent:-999em;
+}
