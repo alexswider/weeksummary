@@ -1,5 +1,6 @@
 require 'httparty'
 require 'sinatra'
+require 'pry'
 set :haml, :escape_html => true
 
 tokens = File.read("tokens.txt").lines
@@ -8,7 +9,8 @@ get "/" do
 end
 
 post "/summary" do
-	template = ";;;;;;;\r\nDate;Platform;Post Copy;Link attached;Comments;Likes;Shares;Retweets;Engagement\r\n"
+	summary = [";;;;;;;\r\nDate;Platform;Post Copy;Link attached;Comments;Likes;Shares;Retweets;Engagement\r\n"]
+	all_posts = []
 	more = true
 	first = true
 	lrts = 0
@@ -41,7 +43,7 @@ post "/summary" do
 					break
 				end
 				if post["message"]
-					text = post["message"].gsub("\n", " ").slice(0,40).gsub("\"", "\"\"").delete(";").rstrip
+					text = post["message"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip
 				else
 					text = ""
 				end
@@ -78,10 +80,10 @@ post "/summary" do
 						end
 					end
 				end
-				template << date.strftime("%d %b %y;") << "Facebook;" << text << ";#{link};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n"
+				all_posts << (date.strftime("%d %b %y;") << "Facebook;" << text << ";#{link};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
 			end
 		end
-		template = template.prepend("Facebook summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs + mcomm} total engagements) with #{mfavs} likes, #{mcomm} comments and #{mrts} shares. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs + lcomm} total engagements) with #{lfavs} likes, #{lcomm} comments and #{lrts} shares.;;;;;\r\n")
+		summary.insert(0, ("Facebook summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs + mcomm} total engagements) with #{mfavs} likes, #{mcomm} comments and #{mrts} shares. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs + lcomm} total engagements) with #{lfavs} likes, #{lcomm} comments and #{lrts} shares.;;;;;\r\n"))
 	end
 	unless params[:twitter].size == 0
 		more = true
@@ -98,7 +100,8 @@ post "/summary" do
 				end
 				favorites = tweet["favorite_count"].nil?? 0 : tweet["favorite_count"]
 				retweets = tweet["retweet_count"].nil?? 0 : tweet["retweet_count"]
-				text = tweet["text"].gsub("\n", " ").slice(0,40).gsub("\"", "\"\"").delete(";").rstrip
+				text = tweet["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip
+				link = tweet["entities"]["urls"].empty?? "" : tweet["entities"]["urls"].first["expanded_url"]
 				max_id = "&max_id=#{tweet["id"]}"
 				if first
 					lrts = retweets
@@ -125,12 +128,17 @@ post "/summary" do
 						end
 					end
 				end
-				template << date.strftime("%d %b %y;") << "Twitter;" << text << ";;;#{favorites};;#{retweets};#{favorites + retweets}\r\n"
+				all_posts << (date.strftime("%d %b %y;") << "Twitter;" << text << ";" << link << ";;#{favorites};;#{retweets};#{favorites + retweets}\r\n")
 			end
 		end
-	template = template.prepend("Twitter summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs} total engagements) with #{mrts} retweets and #{mfavs} likes. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs} total engagements) with #{lrts} retweets and #{lfavs} likes.;;;;;\r\n")
+	summary.insert(0, ("Twitter summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs} total engagements) with #{mrts} retweets and #{mfavs} likes. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs} total engagements) with #{lrts} retweets and #{lfavs} likes.;;;;;\r\n"))
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
-	File.write(filename, template)
+	all_posts.sort! do |a, b|
+		one = a[0..8].split
+		two = b[0..8].split
+		Time.new("20#{two[2]}", two[1], two[0]) <=> Time.new("20#{one[2]}", one[1], one[0])
+	end
+	File.write(filename, summary.join << all_posts.join)
 	send_file(filename, :filename => (low.strftime("%d") << "-" << hi.strftime("%d") << hi.strftime("%b") << "_summary.csv"))
 end
