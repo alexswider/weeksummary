@@ -1,9 +1,9 @@
-#require 'httparty'
+require 'httparty'
 require 'sinatra'
-#require 'pry'
+require 'pry'
 set :haml, :escape_html => true
 
-#tokens = File.read("tokens.txt").lines
+tokens = File.read("tokens.txt").lines
 get "/" do
 	haml :index
 end
