@@ -26,9 +26,9 @@ post "/summary" do
 	max_id = ""
 	next_page = ""
 	kek = params[:boundary][:hi].scan(/\d+/)
-	hi = Time.new(kek.last, kek[1], kek[0])
+	hi = Time.new(kek.last, kek[0], kek[1])
 	kek = params[:boundary][:low].scan(/\d+/)
-	low = Time.new(kek.last, kek[1], kek[0])
+	low = Time.new(kek.last, kek[0], kek[1])
 	unless params[:fb].size == 0
 		while more
 			query =	first ? "https://graph.facebook.com/#{params[:fb]}/posts?fields=message,link,created_time,shares,comments.limit(1).summary(true),likes.limit(1).summary(true)&access_token=" + tokens[1].chop : next_page
