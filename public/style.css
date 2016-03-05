@@ -6,6 +6,21 @@
 	font-family: AvenirNext-Regular;
 	font-size: 36px;
 }
+.insta1 {
+	position: relative;
+	right: 106px;
+}
+.insta2 {
+	position: relative;
+	right: 63px;
+}
+.login {
+	font-family: AvenirNext-Regular;
+	font-size: 28px;
+	position: relative;
+	left: 50px;
+	bottom: 60px;
+}
 input[type=text] {
 	padding: 12px 20px;
 	margin: 8px 0;
@@ -44,38 +59,37 @@ input[type=submit] {
 }
 a:link {
 	font-family: AvenirNext-Regular;
-	font-size: 36px;
-	color: gray;
-	text-decoration: none;
+	font-size: 28px;
 	position: relative;
 	bottom: 30px;
-	left: 40px;
+	color: gray;
+	text-decoration: none;
 	-webkit-transition: 0.5s;
 	transition: 0.5s;
 }
 a:visited {
 	font-family: AvenirNext-Regular;
-	font-size: 36px;
-	color: gray;
+	font-size: 28px;
 	position: relative;
 	bottom: 30px;
-	left: 40px;
+	color: gray;
+	text-decoration: none;
 	-webkit-transition: 0.5s;
 	transition: 0.5s;
 }
 a:hover {
 	font-family: AvenirNext-Regular;
-	font-size: 36px;
-	color: black;
+	font-size: 28px;
 	position: relative;
 	bottom: 30px;
-	left: 40px;
+	color: black;
+	text-decoration: none;
 }
 a:active {
 	font-family: AvenirNext-Regular;
-	font-size: 36px;
-	color: black;
+	font-size: 28px;
 	position: relative;
 	bottom: 30px;
-	left: 40px;
+	color: black;
+	text-decoration: none;
 }

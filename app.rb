@@ -6,8 +6,10 @@ set :haml, :escape_html => true
 tokens = File.read("tokens.txt").lines
 get "/" do
 	@code = false
+	@insta_token = ""
 	if params[:code]
 		@code = true
+		@insta_token = HTTParty.post("https://api.instagram.com/oauth/access_token", :body => {'client_id' => tokens[2].chop, 'client_secret' => tokens[3].chop, 'grant_type' => 'authorization_code', 'redirect_uri' => 'http://socialscrape.brigademarketing.com', 'code' => params[:code]})["access_token"]
 	end
 	haml :index
 end
@@ -36,6 +38,11 @@ post "/summary" do
 	hi = Time.new(kek.last, kek[0], kek[1])
 	kek = params[:boundary][:low].scan(/\d+/)
 	low = Time.new(kek.last, kek[0], kek[1])
+	if low > hi
+		kek = hi
+		hi = low
+		low = kek
+	end
 	unless params[:fb].size == 0
 		while more
 			query =	first ? "https://graph.facebook.com/#{params[:fb]}/posts?fields=message,link,created_time,shares,comments.limit(1).summary(true),likes.limit(1).summary(true)&access_token=" + tokens[1].chop : next_page
@@ -139,6 +146,8 @@ post "/summary" do
 			end
 		end
 	summary.insert(0, ("Twitter summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs} total engagements) with #{mrts} retweets and #{mfavs} likes. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs} total engagements) with #{lrts} retweets and #{lfavs} likes.;;;;;\r\n"))
+	end
+	unless params[:insta_token].empty?
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
 	all_posts.sort! do |a, b|

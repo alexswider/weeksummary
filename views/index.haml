@@ -16,13 +16,15 @@
     %input{:id => "names", :type => "text", :name => "twitter", :placeholder => "Your Twitter username"}
     %br
     %br
-    %img(src="insta.png")
     -unless @code
-      %a{:href => "https://api.instagram.com/oauth/authorize/?client_id=002cd354c18d41069004accd45944a0a&redirect_uri=http://5.172.232.120:4567&response_type=code"}  Log in
+      %img.insta2(src="insta.png")
+      %a{:href => "https://api.instagram.com/oauth/authorize/?client_id=002cd354c18d41069004accd45944a0a&redirect_uri=http://socialscrape.brigademarketing.com&response_type=code"}  Log in
+      %br
+      %br
+      %br
     -else
-      .from_to Logged in.
-    %br
-    %br
+      %img.insta1(src="insta.png")
+      .login Logged in.
     .from_to
       from
       %input{:id => "date", :type => "text", :name => "boundary[hi]", :placeholder => "MM/DD/YYYY"}
@@ -30,4 +32,5 @@
       %input{:id => "date", :type => "text", :name => "boundary[low]", :placeholder => "MM/DD/YYYY"}
       %br
       %br
+      %input{:type => "hidden", :name => "insta_token", :value => @insta_token}
     %input{:type => "submit"}
