@@ -5,6 +5,10 @@ set :haml, :escape_html => true
 
 tokens = File.read("tokens.txt").lines
 get "/" do
+	@code = false
+	if params[:code]
+		@code = true
+	end
 	haml :index
 end
 

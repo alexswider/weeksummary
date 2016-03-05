@@ -42,3 +42,40 @@ input[type=submit] {
 	border:	none;
 	text-indent:-999em;
 }
+a:link {
+	font-family: AvenirNext-Regular;
+	font-size: 36px;
+	color: gray;
+	text-decoration: none;
+	position: relative;
+	bottom: 30px;
+	left: 40px;
+	-webkit-transition: 0.5s;
+	transition: 0.5s;
+}
+a:visited {
+	font-family: AvenirNext-Regular;
+	font-size: 36px;
+	color: gray;
+	position: relative;
+	bottom: 30px;
+	left: 40px;
+	-webkit-transition: 0.5s;
+	transition: 0.5s;
+}
+a:hover {
+	font-family: AvenirNext-Regular;
+	font-size: 36px;
+	color: black;
+	position: relative;
+	bottom: 30px;
+	left: 40px;
+}
+a:active {
+	font-family: AvenirNext-Regular;
+	font-size: 36px;
+	color: black;
+	position: relative;
+	bottom: 30px;
+	left: 40px;
+}
