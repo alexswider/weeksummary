@@ -1,16 +1,10 @@
 require 'httparty'
 require 'sinatra'
-require 'pry'
+require 'json'
 set :haml, :escape_html => true
 
 tokens = File.read("tokens.txt").lines
 get "/" do
-	@code = false
-	@insta_token = ""
-	if params[:code]
-		@code = true
-		@insta_token = HTTParty.post("https://api.instagram.com/oauth/access_token", :body => {'client_id' => tokens[2].chop, 'client_secret' => tokens[3].chop, 'grant_type' => 'authorization_code', 'redirect_uri' => 'http://socialscrape.brigademarketing.com', 'code' => params[:code]})["access_token"]
-	end
 	haml :index
 end
 
@@ -147,7 +141,50 @@ post "/summary" do
 		end
 	summary.insert(0, ("Twitter summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs} total engagements) with #{mrts} retweets and #{mfavs} likes. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs} total engagements) with #{lrts} retweets and #{lfavs} likes.;;;;;\r\n"))
 	end
-	unless params[:insta_token].empty?
+	unless params[:insta].empty?
+		more = true
+		first = true
+		while more
+			media = JSON.parse(%x`instagram-screen-scrape -u #{params[:insta]}`)
+			media.each do |post|
+				date = Time.at(post["time"])
+				date = Time.new(date.year, date.month, date.day)
+				next if date > hi
+				if date < low
+					more = false
+					break
+				end
+				comments = post["comment"]
+				likes = post["like"]
+				text = post["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip
+				if first
+					mfavs = likes
+					lfavs = likes
+					mcomm = comments
+					lcomm = comments
+					mtext = String.new(text)
+					ltext = String.new(text)
+					mdate = date.strftime("%d %b")
+					ldate = date.strftime("%d %b")
+					first = false
+				else
+					if likes + comments > mcomm + mfavs
+						mfavs = likes
+						mtext = String.new(text)
+						mdate = date.strftime("%d %b")
+					else
+						if likes + comments < lcomm + lfavs
+							lfavs = likes
+							lcomm = comments
+							ltext = String.new(text)
+							ldate = date.strftime("%d %b")
+						end
+					end
+				end
+				all_posts << (date.strftime("%d %b %y;") << "Instagram;" << text << ";;#{comments};#{likes};;;#{likes + comments}\r\n")
+			end
+		end
+		summary.insert(2, ("Instagram summary;;The #{mdate} post " + mtext + " was the top performing post (#{mfavs + mcomm} total engagements) with #{mfavs} likes and #{mcomm} comments. The #{ldate} post "  + ltext + " was the lowest performing post (#{lfavs + lcomm} total engagements) with #{lfavs} likes and #{lcomm} comments.;;;;;\r\n"))
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
 	all_posts.sort! do |a, b|

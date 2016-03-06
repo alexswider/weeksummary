@@ -9,22 +9,15 @@
   %br
   %form{:action => "summary", :method => "post"}
     %img(src="fb.png")
-    %input{:id => "names", :type => "text", :name => "fb", :placeholder => "Your Facebook page's id"}
+    %input{:id => "fb", :type => "text", :name => "fb", :placeholder => "Your Facebook page's id"}
     %br
     %br
     %img(src="twitter.png")
-    %input{:id => "names", :type => "text", :name => "twitter", :placeholder => "Your Twitter username"}
+    %input{:id => "twitter", :type => "text", :name => "twitter", :placeholder => "Your Twitter username"}
     %br
     %br
-    -unless @code
-      %img.insta2(src="insta.png")
-      %a{:href => "https://api.instagram.com/oauth/authorize/?client_id=002cd354c18d41069004accd45944a0a&redirect_uri=http://socialscrape.brigademarketing.com&response_type=code"}  Log in
-      %br
-      %br
-      %br
-    -else
-      %img.insta1(src="insta.png")
-      .login Logged in.
+    %img.insta(src="insta.png")
+    %input{:id => "insta", :type => "text", :name => "insta", :placeholder => "Your Instagram username"}
     .from_to
       from
       %input{:id => "date", :type => "text", :name => "boundary[hi]", :placeholder => "MM/DD/YYYY"}
@@ -32,5 +25,4 @@
       %input{:id => "date", :type => "text", :name => "boundary[low]", :placeholder => "MM/DD/YYYY"}
       %br
       %br
-      %input{:type => "hidden", :name => "insta_token", :value => @insta_token}
     %input{:type => "submit"}
