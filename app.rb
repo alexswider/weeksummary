@@ -151,7 +151,7 @@ post "/summary" do
 			break if date < low
 			comments = post["comment"]
 			likes = post["like"]
-			text = post["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip
+			text = post["text"]? post["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip : ""
 			if first
 				mfavs = likes
 				lfavs = likes
@@ -178,7 +178,7 @@ post "/summary" do
 			end
 			all_posts << (date.strftime("%d %b %y;") << "Instagram;" << text << ";;#{comments};#{likes};;;#{likes + comments}\r\n")
 		end
-		summary.insert(2, ("Instagram summary;;The #{mdate} post " + mtext + " was the top performing post (#{mfavs + mcomm} total engagements) with #{mfavs} likes and #{mcomm} comments. The #{ldate} post "  + ltext + " was the lowest performing post (#{lfavs + lcomm} total engagements) with #{lfavs} likes and #{lcomm} comments.;;;;;\r\n"))
+		summary.insert(0, ("Instagram summary;;The #{mdate} post " + mtext + " was the top performing post (#{mfavs + mcomm} total engagements) with #{mfavs} likes and #{mcomm} comments. The #{ldate} post "  + ltext + " was the lowest performing post (#{lfavs + lcomm} total engagements) with #{lfavs} likes and #{lcomm} comments.;;;;;\r\n"))
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
 	all_posts.sort! do |a, b|
