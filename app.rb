@@ -55,6 +55,7 @@ post "/summary" do
 				else
 					text = ""
 				end
+				text = "\"#{text}\"" if text.include? (",")
 				likes = post["likes"]["summary"]["total_count"]
 				comments = post["comments"]["summary"]["total_count"]
 				shares = post["shares"]? post["shares"]["count"] : 0
@@ -111,6 +112,7 @@ post "/summary" do
 				text = tweet["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip
 				link = tweet["entities"]["urls"].empty?? "" : tweet["entities"]["urls"].first["expanded_url"]
 				max_id = "&max_id=#{tweet["id"]}"
+				text = "\"#{text}\"" if text.include? (",")
 				if first
 					lrts = retweets
 					mrts = lrts
@@ -152,6 +154,7 @@ post "/summary" do
 			comments = post["comment"]
 			likes = post["like"]
 			text = post["text"]? post["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip : ""
+			text = "\"#{text}\"" if text.include? (",")
 			if first
 				mfavs = likes
 				lfavs = likes
