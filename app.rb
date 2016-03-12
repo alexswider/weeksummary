@@ -2,6 +2,7 @@ require 'httparty'
 require 'sinatra'
 require 'json'
 set :haml, :escape_html => true
+set :environment, :production
 
 tokens = File.read("tokens.txt").lines
 get "/" do
@@ -12,20 +13,12 @@ post "/summary" do
 	if params[:boundary][:hi].empty? or params[:boundary][:low].empty?
 		return "You must provide a time span"
 	end
+	min = Hash.new
+	max = Hash.new
 	summary = [";;;;;;;\r\nDate;Platform;Post Copy;Link attached;Comments;Likes;Shares;Retweets;Engagement\r\n"]
 	all_posts = []
 	more = true
 	first = true
-	lrts = 0
-	mrts = 0
-	lfavs = 0
-	mfavs = 0
-	mtext = ""
-	ltext = ""
-	mcomm = 0
-	lcomm = 0
-	mdate = ""
-	ldate = ""
 	max_id = ""
 	next_page = ""
 	kek = params[:boundary][:hi].scan(/\d+/)
@@ -41,7 +34,7 @@ post "/summary" do
 		while more
 			query =	first ? "https://graph.facebook.com/#{params[:fb]}/posts?fields=message,link,created_time,shares,comments.limit(1).summary(true),likes.limit(1).summary(true)&access_token=" + tokens[1].chop : next_page
 			posts = HTTParty.get(query, :headers => {'Accept' => 'application/json'})
-			next_page = posts["paging"]["next"]
+			next_page = posts["paging"]? posts["paging"]["next"] : ""
 			posts["data"].each do |post|
 				ary = post["created_time"].scan(/\d+/)
 				date = Time.new(ary[0], ary[1], ary[2])
@@ -61,38 +54,38 @@ post "/summary" do
 				shares = post["shares"]? post["shares"]["count"] : 0
 				link = post["link"]? post["link"] : ""
 				if first
-					mrts = shares
-					lrts = shares
-					mfavs = likes
-					lfavs = likes
-					lcomm = comments
-					mcomm = comments
-					mdate = date.strftime("%d %b")
-					ldate = date.strftime("%d %b")
-					mtext = String.new(text)
-					ltext = String.new(text)
+					max[:rts] = shares
+					min[:rts] = shares
+					max[:favs] = likes
+					min[:favs] = likes
+					min[:comments] = comments
+					max[:comments] = comments
+					max[:date] = date.strftime("%d %b")
+					min[:date] = date.strftime("%d %b")
+					max[:text] = String.new(text)
+					min[:text] = String.new(text)
 					first = false
 				else
-					if likes + comments + shares > mfavs + mcomm + mrts
-						mfavs = likes
-						mcomm = comments
-						mrts = shares
-						mdate = date.strftime("%d %b")
-						mtext = String.new(text)
+					if likes + comments + shares > max[:favs] + max[:comments] + max[:rts]
+						max[:favs] = likes
+						max[:comments] = comments
+						max[:rts] = shares
+						max[:date] = date.strftime("%d %b")
+						max[:text] = String.new(text)
 					else
-						if likes + comments + shares < lfavs + lcomm + lrts
-							lfavs = likes
-							lcomm = comments
-							lrts = shares
-							ldate = date.strftime("%d %b")
-							ltext = String.new(text)
+						if likes + comments + shares < min[:favs] + min[:comments] + min[:rts]
+							min[:favs] = likes
+							min[:comments] = comments
+							min[:rts] = shares
+							min[:date] = date.strftime("%d %b")
+							min[:text] = String.new(text)
 						end
 					end
 				end
 				all_posts << (date.strftime("%d %b %y;") << "Facebook;" << text << ";#{link};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
 			end
 		end
-		summary.insert(0, ("Facebook summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs + mcomm} total engagements) with #{mfavs} likes, #{mcomm} comments and #{mrts} shares. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs + lcomm} total engagements) with #{lfavs} likes, #{lcomm} comments and #{lrts} shares.;;;;;\r\n"))
+		summary.insert(0, ("Facebook summary;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.;;;;;\r\n"))
 	end
 	unless params[:twitter].size == 0
 		more = true
@@ -114,34 +107,34 @@ post "/summary" do
 				max_id = "&max_id=#{tweet["id"]}"
 				text = "\"#{text}\"" if text.include? (",")
 				if first
-					lrts = retweets
-					mrts = lrts
-					mfavs = favorites
-					lfavs = mfavs
-					mtext = String.new(text)
-					ltext = String.new(text)
-					mdate = date.strftime("%d %b")
-					ldate = date.strftime("%d %b")
+					min[:rts] = retweets
+					max[:rts] = retweets
+					max[:favs] = favorites
+					min[:favs] = favorites
+					max[:text] = String.new(text)
+					min[:text] = String.new(text)
+					max[:date] = date.strftime("%d %b")
+					min[:date] = date.strftime("%d %b")
 					first = false
 				else
-					if favorites + retweets > mrts + mfavs
-						mrts = retweets
-						mfavs = favorites
-						mtext = String.new(text)
-						mdate = date.strftime("%d %b")
+					if favorites + retweets > max[:rts] + max[:favs]
+						max[:rts] = retweets
+						max[:favs] = favorites
+						max[:text] = String.new(text)
+						max[:date] = date.strftime("%d %b")
 					else
-						if favorites + retweets < lrts + lfavs
-							lrts = retweets
-							lfavs = favorites
-							ltext = String.new(text)
-							ldate = date.strftime("%d %b")
+						if favorites + retweets < min[:rts] + min[:favs]
+							min[:rts] = retweets
+							min[:favs] = favorites
+							min[:text] = String.new(text)
+							min[:date] = date.strftime("%d %b")
 						end
 					end
 				end
 				all_posts << (date.strftime("%d %b %y;") << "Twitter;" << text << ";" << link << ";;#{favorites};;#{retweets};#{favorites + retweets}\r\n")
 			end
 		end
-	summary.insert(0, ("Twitter summary;;The #{mdate} post " + mtext + " was the top performing post (#{mrts + mfavs} total engagements) with #{mrts} retweets and #{mfavs} likes. The #{ldate} post "  + ltext + " was the lowest performing post (#{lrts + lfavs} total engagements) with #{lrts} retweets and #{lfavs} likes.;;;;;\r\n"))
+	summary.insert(0, ("Twitter summary;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.;;;;;\r\n"))
 	end
 	unless params[:insta].empty?
 		first = true
@@ -156,32 +149,32 @@ post "/summary" do
 			text = post["text"]? post["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip : ""
 			text = "\"#{text}\"" if text.include? (",")
 			if first
-				mfavs = likes
-				lfavs = likes
-				mcomm = comments
-				lcomm = comments
-				mtext = String.new(text)
-				ltext = String.new(text)
-				mdate = date.strftime("%d %b")
-				ldate = date.strftime("%d %b")
+				max[:favs] = likes
+				min[:favs] = likes
+				max[:comments] = comments
+				min[:comments] = comments
+				max[:text] = String.new(text)
+				min[:text] = String.new(text)
+				max[:date] = date.strftime("%d %b")
+				min[:date] = date.strftime("%d %b")
 				first = false
 			else
-				if likes + comments > mcomm + mfavs
-					mfavs = likes
-					mtext = String.new(text)
-					mdate = date.strftime("%d %b")
+				if likes + comments > max[:comments] + max[:favs]
+					max[:favs] = likes
+					max[:text] = String.new(text)
+					max[:date] = date.strftime("%d %b")
 				else
-					if likes + comments < lcomm + lfavs
-						lfavs = likes
-						lcomm = comments
-						ltext = String.new(text)
-						ldate = date.strftime("%d %b")
+					if likes + comments < min[:comments] + min[:favs]
+						min[:favs] = likes
+						min[:comments] = comments
+						min[:text] = String.new(text)
+						min[:date] = date.strftime("%d %b")
 					end
 				end
 			end
 			all_posts << (date.strftime("%d %b %y;") << "Instagram;" << text << ";;#{comments};#{likes};;;#{likes + comments}\r\n")
 		end
-		summary.insert(0, ("Instagram summary;;The #{mdate} post " + mtext + " was the top performing post (#{mfavs + mcomm} total engagements) with #{mfavs} likes and #{mcomm} comments. The #{ldate} post "  + ltext + " was the lowest performing post (#{lfavs + lcomm} total engagements) with #{lfavs} likes and #{lcomm} comments.;;;;;\r\n"))
+		summary.insert(0, ("Instagram summary;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.;;;;;\r\n"))
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
 	all_posts.sort! do |a, b|
