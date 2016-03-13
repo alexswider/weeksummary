@@ -1,6 +1,7 @@
 require 'httparty'
 require 'sinatra'
 require 'json'
+require 'tilt/haml'
 set :haml, :escape_html => true
 set :environment, :production
 
