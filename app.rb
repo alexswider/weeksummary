@@ -11,12 +11,18 @@ get "/" do
 end
 
 post "/summary" do
+	def week_of date
+		kek = date
+		date += 86400 until date.sunday?
+		kek -= 86400 until kek.monday?
+		return "%02d" % (kek.day) + date.strftime("-%b-%d")
+	end
 	if params[:boundary][:hi].empty? or params[:boundary][:low].empty?
 		return "You must provide a time span"
 	end
-	min = Hash.new
-	max = Hash.new
-	summary = [";;;;;;;\r\nDate;Platform;Post Copy;Link attached;Comments;Likes;Shares;Retweets;Engagement\r\n"]
+	min = Hash.new("")
+	max = Hash.new("")
+	summary = [";;;;;;;;;\r\nWeek of;Date;Platform;Post Copy;Link to post;Link attached;Comments;Likes;Shares;Retweets;Engagement\r\n"]
 	all_posts = []
 	more = true
 	first = true
@@ -31,11 +37,19 @@ post "/summary" do
 		hi = low
 		low = kek
 	end
-	unless params[:fb].size == 0
+	unless params[:fb].empty?
 		while more
 			query =	first ? "https://graph.facebook.com/#{params[:fb]}/posts?fields=message,link,created_time,shares,comments.limit(1).summary(true),likes.limit(1).summary(true)&access_token=" + tokens[1].chop : next_page
 			posts = HTTParty.get(query, :headers => {'Accept' => 'application/json'})
 			next_page = posts["paging"]? posts["paging"]["next"] : ""
+			if posts["paging"]
+				if posts["paging"]["next"].nil?
+					more = false
+					next_page = ""
+				else
+					next_page = posts["paging"]["next"]
+				end
+			end
 			posts["data"].each do |post|
 				ary = post["created_time"].scan(/\d+/)
 				date = Time.new(ary[0], ary[1], ary[2])
@@ -83,16 +97,16 @@ post "/summary" do
 						end
 					end
 				end
-				all_posts << (date.strftime("%d %b %y;") << "Facebook;" << text << ";#{link};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
+				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Facebook;" << text << ";http://facebook.com/#{params[:fb]}/posts/#{post["id"].scan(/\d+/).last};#{link};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
 			end
 		end
-		summary.insert(0, ("Facebook summary;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.;;;;;\r\n"))
+		summary.insert(0, ("Facebook summary;;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.;;;;;\r\n")) unless first
 	end
-	unless params[:twitter].size == 0
+	unless params[:twitter].empty?
 		more = true
 		first = true
 		while more
-			tweets = HTTParty.get("https://api.twitter.com/1.1/statuses/user_timeline.json?include_rts=false&count=200&screen_name=#{params[:twitter]}#{max_id}", :headers => {"Authorization" => "Bearer " + tokens[0].chop})
+			tweets = HTTParty.get("https://api.twitter.com/1.1/statuses/user_timeline.json?include_rts=true&count=200&screen_name=#{params[:twitter]}#{max_id}", :headers => {"Authorization" => "Bearer " + tokens[0].chop})
 			tweets.each do |tweet|
 				ary = tweet["created_at"].split
 				date = Time.new(ary.last, ary[1], ary[2])
@@ -132,10 +146,10 @@ post "/summary" do
 						end
 					end
 				end
-				all_posts << (date.strftime("%d %b %y;") << "Twitter;" << text << ";" << link << ";;#{favorites};;#{retweets};#{favorites + retweets}\r\n")
+				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Twitter;" << text << ";http://twitter.com/#{params[:twitter]}/status/#{tweet["id"]};" << link << ";;#{favorites};;#{retweets};#{favorites + retweets}\r\n")
 			end
 		end
-	summary.insert(0, ("Twitter summary;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.;;;;;\r\n"))
+	summary.insert(0, ("Twitter summary;;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.;;;;;\r\n")) unless first
 	end
 	unless params[:insta].empty?
 		first = true
@@ -173,14 +187,14 @@ post "/summary" do
 					end
 				end
 			end
-			all_posts << (date.strftime("%d %b %y;") << "Instagram;" << text << ";;#{comments};#{likes};;;#{likes + comments}\r\n")
+			all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Instagram;" << text << "http://instagram.com/p/#{post["id"]};;#{comments};#{likes};;;#{likes + comments}\r\n")
 		end
-		summary.insert(0, ("Instagram summary;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.;;;;;\r\n"))
+		summary.insert(0, ("Instagram summary;;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.;;;;;\r\n")) unless first
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
 	all_posts.sort! do |a, b|
-		one = a[0..8].split
-		two = b[0..8].split
+		one = a[10..18].split
+		two = b[10..18].split
 		Time.new("20#{two[2]}", two[1], two[0]) <=> Time.new("20#{one[2]}", one[1], one[0])
 	end
 	File.write(filename, summary.join << all_posts.join)
