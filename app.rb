@@ -193,7 +193,7 @@ post "/summary" do
 					end
 				end
 			end
-			all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Instagram;" << text << "http://instagram.com/p/#{post["id"]};;;#{comments};#{likes};;;#{likes + comments}\r\n")
+			all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Instagram;" << text << ";http://instagram.com/p/#{post["id"]};;;#{comments};#{likes};;;#{likes + comments}\r\n")
 		end
 		summary.insert(0, ("Instagram summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.\";;;;;;\r\n")) unless first
 	end
