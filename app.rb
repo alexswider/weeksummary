@@ -106,7 +106,7 @@ post "/summary" do
 				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Facebook;" << text << ";http://facebook.com/#{params[:fb]}/posts/#{post["id"].scan(/\d+/).last};#{link};#{views};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
 			end
 		end
-		summary.insert(0, ("\"Facebook summary;;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.\";;;;;;\r\n")) unless first
+		summary.insert(0, ("Facebook summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.\";;;;;;\r\n")) unless first
 	end
 	unless params[:twitter].empty?
 		more = true
@@ -155,7 +155,7 @@ post "/summary" do
 				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Twitter;" << text << ";http://twitter.com/#{params[:twitter]}/status/#{tweet["id"]};" << link << ";;;#{favorites};;#{retweets};#{favorites + retweets}\r\n")
 			end
 		end
-	summary.insert(0, ("\"Twitter summary;;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.\";;;;;;\r\n")) unless first
+	summary.insert(0, ("Twitter summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.\";;;;;;\r\n")) unless first
 	end
 	unless params[:insta].empty?
 		first = true
@@ -195,7 +195,7 @@ post "/summary" do
 			end
 			all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Instagram;" << text << "http://instagram.com/p/#{post["id"]};;;#{comments};#{likes};;;#{likes + comments}\r\n")
 		end
-		summary.insert(0, ("\"Instagram summary;;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.\";;;;;;\r\n")) unless first
+		summary.insert(0, ("Instagram summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.\";;;;;;\r\n")) unless first
 	end
 	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
 	all_posts.sort! do |a, b|
