@@ -103,7 +103,7 @@ post "/summary" do
 						end
 					end
 				end
-				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Facebook;" << text << ";http://facebook.com/#{params[:fb]}/posts/#{post["id"].scan(/\d+/).last};#{link};#{views};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
+				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Facebook;" << text << ";http://facebook.com/#{params[:fb]}/posts/#{post["id"].scan(/\d+/).last};#{link};\"#{views}\";#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
 			end
 		end
 		summary.insert(0, ("Facebook summary;;;The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.;;;;;;\r\n")) unless first
