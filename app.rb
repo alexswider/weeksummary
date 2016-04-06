@@ -112,7 +112,7 @@ post "/summary" do
 		more = true
 		first = true
 		while more
-			tweets = HTTParty.get("https://api.twitter.com/1.1/statuses/user_timeline.json?include_rts=true&count=200&screen_name=#{params[:twitter]}#{max_id}", :headers => {"Authorization" => "Bearer " + tokens[0].chop})
+			tweets = HTTParty.get("https://api.twitter.com/1.1/statuses/user_timeline.json?include_rts=true&exclude_replies=true&count=200&screen_name=#{params[:twitter]}#{max_id}", :headers => {"Authorization" => "Bearer " + tokens[0].chop})
 			tweets.each do |tweet|
 				ary = tweet["created_at"].split
 				date = Time.new(ary.last, ary[1], ary[2])
