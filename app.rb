@@ -158,46 +158,60 @@ post "/summary" do
 	summary.insert(0, ("Twitter summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.\";;;;;;\r\n")) unless first
 	end
 	unless params[:insta].empty?
+		more = true
 		first = true
-		media = JSON.parse(%x`instagram-screen-scrape -u #{params[:insta]}`)
-		media.each do |post|
-			date = Time.at(post["time"])
-			date = Time.new(date.year, date.month, date.day)
-			next if date > hi
-			break if date < low
-			comments = post["comment"]
-			likes = post["like"]
-			text = post["text"]? post["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip : ""
-			text = "\"#{text}\"" if text.include? (",")
-			if first
-				max[:favs] = likes
-				min[:favs] = likes
-				max[:comments] = comments
-				min[:comments] = comments
-				max[:text] = String.new(text)
-				min[:text] = String.new(text)
-				max[:date] = date.strftime("%d %b")
-				min[:date] = date.strftime("%d %b")
-				first = false
-			else
-				if likes + comments > max[:comments] + max[:favs]
+		max_id = ""
+		while more
+			media = HTTParty.get("https://instagram.com/#{params[:insta]}/media" + max_id)
+			max_id = "?max_id=" + media["items"].last["id"][/\d+/]
+			more = media["more_available"]
+			media["items"].each do |post|
+				date = Time.at(post["created_time"].to_i)
+				date = Time.new(date.year, date.month, date.day)
+				next if date > hi
+				if date < low
+					more = false
+					break
+				end
+				comments = post["comments"]["count"]
+				likes = post["likes"]["count"]
+				text = if post["caption"] and post["caption"]["text"]
+						   post["caption"]["text"].gsub("\n", " ").gsub("\"", "\"\"").delete(";").rstrip
+					   else
+						   ""
+					   end
+				text = "\"#{text}\"" if text.include? (",")
+				link = post["link"]
+				if first
 					max[:favs] = likes
+					min[:favs] = likes
+					max[:comments] = comments
+					min[:comments] = comments
 					max[:text] = String.new(text)
+					min[:text] = String.new(text)
 					max[:date] = date.strftime("%d %b")
+					min[:date] = date.strftime("%d %b")
+					first = false
 				else
-					if likes + comments < min[:comments] + min[:favs]
-						min[:favs] = likes
-						min[:comments] = comments
-						min[:text] = String.new(text)
-						min[:date] = date.strftime("%d %b")
+					if likes + comments > max[:comments] + max[:favs]
+						max[:favs] = likes
+						max[:text] = String.new(text)
+						max[:date] = date.strftime("%d %b")
+					else
+						if likes + comments < min[:comments] + min[:favs]
+							min[:favs] = likes
+							min[:comments] = comments
+							min[:text] = String.new(text)
+							min[:date] = date.strftime("%d %b")
+						end
 					end
 				end
+				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Instagram;" << text << ";#{link};;;#{comments};#{likes};;;#{likes + comments}\r\n")
 			end
-			all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Instagram;" << text << ";http://instagram.com/p/#{post["id"]};;;#{comments};#{likes};;;#{likes + comments}\r\n")
 		end
 		summary.insert(0, ("Instagram summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.\";;;;;;\r\n")) unless first
 	end
-	filename = "dw/#{params[:twitter] << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b")}.csv"
+	filename = "dw/#{params[:fb]}_#{params[:twitter]}_#{params[:insta]}_" << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b") << ".csv"
 	all_posts.sort! do |a, b|
 		one = a[10..18].split
 		two = b[10..18].split
