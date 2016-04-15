@@ -2,7 +2,6 @@ require 'nokogiri'
 require 'open-uri'
 require 'httparty'
 require 'sinatra'
-require 'json'
 require 'tilt/haml'
 set :haml, :escape_html => true
 set :environment, :production
@@ -24,12 +23,18 @@ post "/summary" do
 	end
 	min = Hash.new("")
 	max = Hash.new("")
-	summary = [";;;;;;;;;\r\nWeek of;Date;Platform;Post Copy;Link to post;Link/video attached;Video views;Comments;Likes;Shares;Retweets;Engagement\r\n"]
+	summary = [";;;;;;;;;;\r\nWeek of;Date;Film;Platform;Post Copy;Link to post;Link/video attached;Video views;Comments;Likes;Shares;Retweets;Engagement\r\n"]
 	all_posts = []
 	more = true
 	first = true
 	max_id = ""
 	next_page = ""
+	film = "N/A"
+	keywords = params[:film2].split(",")
+	unless params[:film2].empty?
+		keywords.each {|word| word.strip!}
+		keywords = /#{keywords.join("|")}/i
+	end
 	kek = params[:boundary][:hi].scan(/\d+/)
 	hi = Time.new(kek.last, kek[0], kek[1])
 	kek = params[:boundary][:low].scan(/\d+/)
@@ -71,8 +76,12 @@ post "/summary" do
 				shares = post["shares"]? post["shares"]["count"] : 0
 				link = post["link"]? post["link"] : ""
 				views = ""
+				film = "N/A"
 				if link.include? "videos"
 					views = "\"#{Nokogiri::HTML(open(link)).css('div.fbPhotosMediaInfo > span.fcg')[2].text[/[^a-zA-Z]+/].strip}\""
+				end
+				unless params[:film1].empty? or params[:film2].empty?
+					film = params[:film1] if text[keywords]
 				end
 				if first
 					max[:rts] = shares
@@ -103,10 +112,10 @@ post "/summary" do
 						end
 					end
 				end
-				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Facebook;" << text << ";http://facebook.com/#{params[:fb]}/posts/#{post["id"].scan(/\d+/).last};#{link};#{views};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
+				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << film << ";Facebook;" << text << ";http://facebook.com/#{params[:fb]}/posts/#{post["id"].scan(/\d+/).last};#{link};#{views};#{comments};#{likes};#{shares};;#{likes + comments + shares}\r\n")
 			end
 		end
-		summary.insert(0, ("Facebook summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.\";;;;;;\r\n")) unless first
+		summary.insert(0, ("Facebook summary;;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes, #{max[:comments]} comments and #{max[:rts]} shares. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes, #{min[:comments]} comments and #{min[:rts]} shares.\";;;;;;\r\n")) unless first
 	end
 	unless params[:twitter].empty?
 		more = true
@@ -127,6 +136,10 @@ post "/summary" do
 				link = tweet["entities"]["urls"].empty?? "" : tweet["entities"]["urls"].first["expanded_url"]
 				max_id = "&max_id=#{tweet["id"]}"
 				text = "\"#{text}\"" if text.include? (",")
+				film = "N/A"
+				unless params[:film1].empty? or params[:film2].empty?
+					film = params[:film1] if text[keywords]
+				end
 				if first
 					min[:rts] = retweets
 					max[:rts] = retweets
@@ -152,10 +165,10 @@ post "/summary" do
 						end
 					end
 				end
-				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Twitter;" << text << ";http://twitter.com/#{params[:twitter]}/status/#{tweet["id"]};" << link << ";;;#{favorites};;#{retweets};#{favorites + retweets}\r\n")
+				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << film << ";Twitter;" << text << ";http://twitter.com/#{params[:twitter]}/status/#{tweet["id"]};" << link << ";;;#{favorites};;#{retweets};#{favorites + retweets}\r\n")
 			end
 		end
-	summary.insert(0, ("Twitter summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.\";;;;;;\r\n")) unless first
+	summary.insert(0, ("Twitter summary;;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:rts] + max[:favs]} total engagements) with #{max[:rts]} retweets and #{max[:favs]} likes. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:rts] + min[:favs]} total engagements) with #{min[:rts]} retweets and #{min[:favs]} likes.\";;;;;;\r\n")) unless first
 	end
 	unless params[:insta].empty?
 		more = true
@@ -182,6 +195,10 @@ post "/summary" do
 					   end
 				text = "\"#{text}\"" if text.include? (",")
 				link = post["link"]
+				film = "N/A"
+				unless params[:film1].empty? or params[:film2].empty?
+					film = params[:film1] if text[keywords]
+				end
 				if first
 					max[:favs] = likes
 					min[:favs] = likes
@@ -206,10 +223,10 @@ post "/summary" do
 						end
 					end
 				end
-				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << "Instagram;" << text << ";#{link};;;#{comments};#{likes};;;#{likes + comments}\r\n")
+				all_posts << (week_of(date) << date.strftime(";%d %b %y;") << film << ";Instagram;" << text << ";#{link};;;#{comments};#{likes};;;#{likes + comments}\r\n")
 			end
 		end
-		summary.insert(0, ("Instagram summary;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.\";;;;;;\r\n")) unless first
+		summary.insert(0, ("Instagram summary;;;;\"The #{max[:date]} post " + max[:text] + " was the top performing post (#{max[:favs] + max[:comments]} total engagements) with #{max[:favs]} likes and #{max[:comments]} comments. The #{min[:date]} post "  + min[:text] + " was the lowest performing post (#{min[:favs] + min[:comments]} total engagements) with #{min[:favs]} likes and #{min[:comments]} comments.\";;;;;;\r\n")) unless first
 	end
 	filename = "dw/#{params[:fb]}_#{params[:twitter]}_#{params[:insta]}_" << low.day.to_s << "-" << hi.day.to_s << hi.strftime("%b") << ".csv"
 	all_posts.sort! do |a, b|

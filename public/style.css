@@ -1,6 +1,5 @@
 .heading {
-	font-family: AvenirNext-Bold;
-	font-size: 48px;
+	font-family: AvenirNext-Bold; font-size: 48px;
 }
 .from_to {
 	font-family: AvenirNext-Regular;
@@ -57,6 +56,13 @@ input[type=text]#insta {
 	position: relative;
 	bottom: 30px;
 	left: 42px;
+}
+input[type=text]#film {
+	height: 40px;
+	width: 205px;
+	position: relative;
+	bottom: 5px;
+	left: 20px;
 }
 input[type=submit] {
 	background-image: url(scrape.png);
