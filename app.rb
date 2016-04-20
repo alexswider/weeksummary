@@ -30,11 +30,16 @@ post "/summary" do
 	max_id = ""
 	next_page = ""
 	film = "N/A"
-	keywords = params[:film2].split(",")
-	unless params[:film2].empty?
-		keywords.each {|word| word.strip!}
-		keywords = /#{keywords.join("|")}/i
+	films = params[:films]
+	films.each {|x| x.strip!}
+	films.delete("")
+	keywords = params[:keywords]
+	keywords.each_index do |i|
+		keywords[i] = keywords[i].split(",")
 	end
+	keywords.each {|x| x.each {|y| y.strip!} }
+	keywords.each_index {|i| keywords[i] = /#{keywords[i].join("|")}/i }
+	keywords.delete(//i)
 	kek = params[:boundary][:hi].scan(/\d+/)
 	hi = Time.new(kek.last, kek[0], kek[1])
 	kek = params[:boundary][:low].scan(/\d+/)
@@ -80,8 +85,13 @@ post "/summary" do
 				if link.include? "videos"
 					views = "\"#{Nokogiri::HTML(open(link)).css('div.fbPhotosMediaInfo > span.fcg')[2].text[/[^a-zA-Z]+/].strip}\""
 				end
-				unless params[:film1].empty? or params[:film2].empty?
-					film = params[:film1] if text[keywords]
+				unless keywords.empty? or films.empty?
+					keywords.each_index do |i|
+						if text[keywords[i]]
+							film = films[i]
+							break
+						end
+					end
 				end
 				if first
 					max[:rts] = shares
@@ -137,8 +147,13 @@ post "/summary" do
 				max_id = "&max_id=#{tweet["id"]}"
 				text = "\"#{text}\"" if text.include? (",")
 				film = "N/A"
-				unless params[:film1].empty? or params[:film2].empty?
-					film = params[:film1] if text[keywords]
+				unless keywords.empty? or films.empty?
+					keywords.each_index do |i|
+						if text[keywords[i]]
+							film = films[i]
+							break
+						end
+					end
 				end
 				if first
 					min[:rts] = retweets
@@ -196,8 +211,13 @@ post "/summary" do
 				text = "\"#{text}\"" if text.include? (",")
 				link = post["link"]
 				film = "N/A"
-				unless params[:film1].empty? or params[:film2].empty?
-					film = params[:film1] if text[keywords]
+				unless keywords.empty? or films.empty?
+					keywords.each_index do |i|
+						if text[keywords[i]]
+							film = films[i]
+							break
+						end
+					end
 				end
 				if first
 					max[:favs] = likes
